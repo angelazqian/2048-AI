@@ -64,9 +64,13 @@ GameManager.prototype.setup = function () {
 
 // Set up the initial tiles to start the game with
 GameManager.prototype.addStartTiles = function () {
-  for (var i = 0; i < this.startTiles; i++) {
-    this.addTile();
-  }
+  // for (var i = 0; i < this.startTiles; i++) {
+  //   this.addTile();
+  // }
+  this.grid.insertTile(new Tile({x: 0, y: 0}, 1024));
+  this.grid.insertTile(new Tile({x: 0, y: 1}, 1024));
+  this.grid.insertTile(new Tile({x: 1, y: 2}, 1024));
+  this.grid.insertTile(new Tile({x: 2, y: 3}, 1024));
 };
 
 GameManager.prototype.addTile = function () {
@@ -260,8 +264,14 @@ GameManager.prototype.move = function (direction) {
 
           // The mighty 2048 tile
           if (merged.value >= self.targetTile) {
-            self.won = true;
-            self.targetTile = merged.value * 2; // Next target tile
+            var playerbutton = document.querySelector(".player-button");
+            if (playerbutton && playerbutton.checked) {
+              self.won = true;
+              self.targetTile = merged.value * 2; // Next target tile
+            }
+            else {
+              self.won = false;
+            }
           } else {
             self.won = false;
           }
