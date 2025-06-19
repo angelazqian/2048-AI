@@ -3,7 +3,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager   = new InputManager;
   this.storageManager = new StorageManager;
   this.actuator       = new Actuator;
-
+  this.lastDir        = 0; //0: up, 1: right, 2: down, 3: left
   this.startTiles     = 2;
 
   this.inputManager.on("move", this.move.bind(this));
@@ -22,7 +22,8 @@ GameManager.prototype.restart = function () {
 
 // Keep playing after winning (allows going over 2048)
 GameManager.prototype.keepPlaying = function () {
-  this.keepPlaying = true;
+  this.keepPlaying = false;
+  this.won = false; // Reset the won state
   this.actuator.continueGame(); // Clear the game won/lost message
 };
 
@@ -39,6 +40,8 @@ GameManager.prototype.setup = function () {
   if (previousState) {
     this.grid        = new Grid(previousState.grid.size,
                                 previousState.grid.cells); // Reload grid
+    
+    this.targetTile = Math.max(this.grid ? this.grid.largestTile()*2 : 0, 2048);
     this.score       = previousState.score;
     this.over        = previousState.over;
     this.won         = previousState.won;
@@ -46,6 +49,7 @@ GameManager.prototype.setup = function () {
   } else {
     this.grid        = new Grid(this.size);
     this.score       = 0;
+    this.targetTile = 2048; // Default target tile
     this.over        = false;
     this.won         = false;
     this.keepPlaying = false;
@@ -61,16 +65,103 @@ GameManager.prototype.setup = function () {
 // Set up the initial tiles to start the game with
 GameManager.prototype.addStartTiles = function () {
   for (var i = 0; i < this.startTiles; i++) {
-    this.addRandomTile();
+    this.addTile();
   }
 };
 
-// Adds a tile in a random position
+GameManager.prototype.addTile = function () {
+  var easyModeCheckbox = document.querySelector(".easy-tile-button");
+  if (easyModeCheckbox && easyModeCheckbox.checked) {
+    this.addEasyTile();
+  } else {
+    this.addRandomTile();
+  }
+}
+
 GameManager.prototype.addRandomTile = function () {
   if (this.grid.cellsAvailable()) {
     var value = Math.random() < 0.9 ? 2 : 4;
     var tile = new Tile(this.grid.randomAvailableCell(), value);
 
+    this.grid.insertTile(tile);
+  }
+};
+
+// Adds a tile in optimal position
+GameManager.prototype.addEasyTile = function () {
+  if (this.grid.cellsAvailable()) {
+    //TODO:
+    //current strat: always add a tile w value 2, but add tile of 4 is 2 will result in game over
+    //this makes gameplay slower, but yields a higher score
+    //add tiles to the border opposite of the last move, to avoid rectangle formation
+    //add in same col/row as smallest tile for endgame strats
+
+    var value = 2;
+    var vector = this.getVector(this.lastDir);
+
+    var avail = [];  //only look at opposite border, guaranteed to have *something* free
+    for (var i = 0; i < this.size; i++) {
+      var cell = {x: i, y: i};
+      if (this.lastDir == 0)
+        cell.y = this.size - 1;
+      else if (this.lastDir == 1)
+        cell.x = 0;
+      else if (this.lastDir == 2)
+        cell.y = 0;
+      else if (this.lastDir == 3)
+        cell.x = this.size - 1;
+      if (this.grid.cellAvailable(cell)) {
+        avail.push(cell);
+      }
+    }
+    if (this.grid.availableCells().length ==1) {
+      //possible game over condition, if no surrounding 2's then spawn a 4
+      //if the 4 won't save you, use a 2, you're dead anyway
+      var cell = avail[0];
+      var twos = 0;
+      var fours = 0;
+      for (var i = 0; i < 4; i++) {
+        var dir = this.getVector(i);
+        var cell2 = {x: cell.x + dir.x, y: cell.y + dir.y};
+        if (this.grid.withinBounds(cell2)) {
+          var tile = this.grid.cellContent(cell2);
+          if (tile.value == 2)
+            twos++;
+          else if (tile.value == 4)
+            fours++;
+        }
+      }
+      if (!twos && fours)
+        value = 4;
+    }
+
+    var bestval = 131073; //2^17+1, guaranteed to be biggest
+    var bestchoices = [];
+    for (var i = 0; i < avail.length; i++) {
+      var cell = avail[i];
+      for (var j = 0; j < this.size; j++) {
+        var cell2 = {x: cell.x, y: cell.y};
+        cell2.x += vector.x * j;
+        cell2.y += vector.y * j;
+        if (this.grid.cellContent(cell2)) {
+          if (this.grid.cellContent(cell2).value < bestval) {
+            bestval = this.grid.cellContent(cell2).value;
+            bestchoices = [cell];
+          } else if (this.grid.cellContent(cell2).value == bestval) {
+            bestchoices.push(cell);
+          }
+          break;
+        }
+        if (j == this.size - 1) {
+          if (bestval != 0)
+            bestchoices = [];
+          bestval = 0;
+          bestchoices.push(cell);
+        }
+      }
+    }
+    var cellindex = Math.floor(Math.random() * bestchoices.length);
+    var tile = new Tile(bestchoices[cellindex], value);
     this.grid.insertTile(tile);
   }
 };
@@ -93,7 +184,8 @@ GameManager.prototype.actuate = function () {
     over:       this.over,
     won:        this.won,
     bestScore:  this.storageManager.getBestScore(),
-    terminated: this.isGameTerminated()
+    terminated: this.isGameTerminated(),
+    targetTile: this.targetTile
   });
 
 };
@@ -167,7 +259,12 @@ GameManager.prototype.move = function (direction) {
           self.score += merged.value;
 
           // The mighty 2048 tile
-          if (merged.value === 2048) self.won = true;
+          if (merged.value >= self.targetTile) {
+            self.won = true;
+            self.targetTile = merged.value * 2; // Next target tile
+          } else {
+            self.won = false;
+          }
         } else {
           self.moveTile(tile, positions.farthest);
         }
@@ -180,7 +277,8 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
-    this.addRandomTile();
+    this.lastDir = direction; // Save the last move direction
+    this.addTile();
 
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
@@ -241,30 +339,33 @@ GameManager.prototype.movesAvailable = function () {
 
 // Check for available matches between tiles (more expensive check)
 GameManager.prototype.tileMatchesAvailable = function () {
-  var self = this;
-
-  var tile;
-
   for (var x = 0; x < this.size; x++) {
     for (var y = 0; y < this.size; y++) {
-      tile = this.grid.cellContent({ x: x, y: y });
+      var tile = this.grid.cellContent({ x: x, y: y });
 
       if (tile) {
+        // Check all four directions
         for (var direction = 0; direction < 4; direction++) {
-          var vector = self.getVector(direction);
-          var cell   = { x: x + vector.x, y: y + vector.y };
+          var vector = this.getVector(direction);
+          var cell = { x: x + vector.x, y: y + vector.y };
 
-          var other  = self.grid.cellContent(cell);
-
-          if (other && other.value === tile.value) {
-            return true; // These two tiles can be merged
+          // Traverse along the direction to find mergeable tiles
+          while (this.grid.withinBounds(cell)) {
+            var other = this.grid.cellContent(cell);
+            if (other) {
+              if (other.value === tile.value) {
+                return true; // Merge is possible
+              }
+              break; // Stop if a non-mergeable tile is found
+            }
+            cell.x += vector.x;
+            cell.y += vector.y;
           }
         }
       }
     }
   }
-
-  return false;
+  return false; // No merges available
 };
 
 GameManager.prototype.positionsEqual = function (first, second) {
