@@ -270,20 +270,6 @@ hr {
       display: inline-block; }
   .game-message.game-won, .game-message.game-over {
     display: block; }
-    .game-message.game-won p, .game-message.game-over p {
-      -webkit-animation: slide-up 1.5s ease-in-out 2500ms;
-      -moz-animation: slide-up 1.5s ease-in-out 2500ms;
-      animation: slide-up 1.5s ease-in-out 2500ms;
-      -webkit-animation-fill-mode: both;
-      -moz-animation-fill-mode: both;
-      animation-fill-mode: both; }
-    .game-message.game-won .mailing-list, .game-message.game-over .mailing-list {
-      -webkit-animation: fade-in 1.5s ease-in-out 2500ms;
-      -moz-animation: fade-in 1.5s ease-in-out 2500ms;
-      animation: fade-in 1.5s ease-in-out 2500ms;
-      -webkit-animation-fill-mode: both;
-      -moz-animation-fill-mode: both;
-      animation-fill-mode: both; }
 
 .ai-panel {
   position: absolute;
@@ -546,6 +532,9 @@ hr {
   -moz-transition-property: -moz-transform;
   transition-property: transform; }
   .tile .tile-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 3px;
     background: #eee4da;
     text-align: center;
@@ -617,6 +606,15 @@ hr {
     @media screen and (max-width: 520px) {
       .tile.tile-super .tile-inner {
         font-size: 10px; } }
+  .tile.tile-131072 .tile-inner {
+    color: #f9f6f2;
+    background: #000000;
+    box-shadow: 0 0 30px 10px rgba(243, 215, 116, 1), inset 0 0 0 1px rgba(255, 255, 255, 0.33333);
+    font-size: 25px; }
+    @media screen and (max-width: 520px) {
+      .tile.tile-131072 .tile-inner {
+        font-size: 10px; } }
+  
 
 @-webkit-keyframes appear {
   0% {
@@ -910,20 +908,6 @@ input[type="text"].state-input {
         display: inline-block; }
     .game-message.game-won, .game-message.game-over {
       display: block; }
-      .game-message.game-won p, .game-message.game-over p {
-        -webkit-animation: slide-up 1.5s ease-in-out 2500ms;
-        -moz-animation: slide-up 1.5s ease-in-out 2500ms;
-        animation: slide-up 1.5s ease-in-out 2500ms;
-        -webkit-animation-fill-mode: both;
-        -moz-animation-fill-mode: both;
-        animation-fill-mode: both; }
-      .game-message.game-won .mailing-list, .game-message.game-over .mailing-list {
-        -webkit-animation: fade-in 1.5s ease-in-out 2500ms;
-        -moz-animation: fade-in 1.5s ease-in-out 2500ms;
-        animation: fade-in 1.5s ease-in-out 2500ms;
-        -webkit-animation-fill-mode: both;
-        -moz-animation-fill-mode: both;
-        animation-fill-mode: both; }
 
   .grid-container {
     position: absolute;
