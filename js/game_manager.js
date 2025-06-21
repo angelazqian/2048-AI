@@ -13,6 +13,14 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.setup();
 }
 
+function postMove(state, action) {
+  fetch("http://localhost:5500/log", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ state, action })
+  });
+}
+
 // Restart the game
 GameManager.prototype.restart = function () {
   this.storageManager.clearGameState();
@@ -237,6 +245,8 @@ GameManager.prototype.moveTile = function (tile, cell) {
 // Move tiles on the grid in the specified direction
 GameManager.prototype.move = function (direction) {
   // 0: up, 1: right, 2: down, 3: left
+  const state = this.grid.cells.flat().map(cell => (cell ? cell.value : 0));
+
   var self = this;
 
   if (this.isGameTerminated()) return; // Don't do anything if the game's over
@@ -294,6 +304,7 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
+    postMove(state, direction);
     this.lastDir = direction; // Save the last move direction
     this.addTile();
 
