@@ -142,6 +142,8 @@ hr {
 
 .container {
   width: 500px;
+  justify-content: center;
+  align-items: center;
   margin: 0 auto; }
 
 @-webkit-keyframes fade-in {
@@ -765,13 +767,38 @@ input[type="text"].state-input {
     display: inline-block;
     vertical-align: middle; }
 
+@media screen and (max-width: 946px) {
+  .ai-panel {
+    position: static;
+    width: 480px;
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .ai-panel label {
+    display: inline-block;
+    margin-right: 10px;
+  }
+  .ai-panel-header {
+    flex-basis: 100%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  .game-explanation {
+    margin-top: 20px; }
+}
 @media screen and (max-width: 520px) {
+  .ai-panel {
+    width: 280px;
+  }
   html, body {
+    width: 100%;
+    overflow-x: hidden;
     font-size: 15px; }
 
   body {
-    margin: 20px 0;
-    padding: 0 20px; }
+    margin: 20px 0;}
 
   h1.title {
     font-size: 27px;
@@ -779,6 +806,8 @@ input[type="text"].state-input {
 
   .container {
     width: 280px;
+    justify-content: center;
+    align-items: center;
     margin: 0 auto; }
 
   .score-container, .best-container {
@@ -827,25 +856,6 @@ input[type="text"].state-input {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box; }
-  .ai-panel {
-    position: static;
-    width: 260px;
-    margin-top: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  .ai-panel label {
-    display: inline-block;
-    margin-right: 10px;
-  }
-  .ai-panel-header {
-    flex-basis: 100%;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-  .game-explanation {
-    margin-top: 20px; }
   .game-message {
     display: none;
     position: absolute;
