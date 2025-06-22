@@ -1,7 +1,7 @@
 let Imitationmodel;
 let RLmodel;
 const reinforcementCheckbox = document.querySelector(".rl-button");
-const imitationCheckbox = document.querySelector(".toy-button");
+const imitationCheckbox = document.querySelector(".imitation-button");
 const speedButtons = {
   fast: document.querySelector(".full-speed-button"),
   normal: document.querySelector(".fast-speed-button"),
@@ -9,7 +9,7 @@ const speedButtons = {
 };
 
 async function loadImitationModel() {
-  Imitationmodel = await tf.loadGraphModel('imitation-learn/2048_toy_tfjs/model.json');
+  Imitationmodel = await tf.loadGraphModel('imitation-learn/2048_imitation_tfjs/model.json');
   console.log("Imitation model loaded");
 }
 async function loadRLModel() {
