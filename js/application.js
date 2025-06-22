@@ -40,9 +40,12 @@ async function autoImitationPlay(gameManager) {
     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
     const move = await predictImitationMove(gameManager.grid);
     gameManager.move(move);
+    rot = 0;
+    order = [0,1,3,2];
     while (JSON.stringify(gameManager.grid.cells) === originalGridState) {
-      console.log("Model got stuck, picking a random move...");
-      gameManager.move(Math.floor(Math.random() * 4));
+      console.log("Model got stuck, going through move rotation...");
+      gameManager.move(order[rot]);
+      rot++;
     }
     let delay = 200; //speed checks
     if (speedButtons.fast.checked) {
