@@ -46,7 +46,9 @@ KeyboardInputManager.prototype.listen = function () {
     87: 0, // W
     68: 1, // D
     83: 2, // S
-    65: 3  // A
+    65: 3,  // A
+    85: "undo",  // U for undo
+    90: "undo"  // Z for undo
   };
 
   // Respond to direction keys
@@ -58,7 +60,11 @@ KeyboardInputManager.prototype.listen = function () {
     if (!modifiers) {
       if (mapped !== undefined) {
         event.preventDefault();
-        self.emit("move", mapped);
+        if (mapped === "undo") {
+          self.emit("undo");
+        } else {
+          self.emit("move", mapped);
+        }
       }
     }
 

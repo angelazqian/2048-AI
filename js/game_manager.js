@@ -9,15 +9,38 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
-
+  this.inputManager.on("undo", this.undo.bind(this));
   this.setup();
 }
 
-function postMove(state, action) {
+GameManager.prototype.undo = function () {
+  fetch("http://localhost:5500/undo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" }
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.state) {
+        this.grid = new Grid(this.size);
+        data.state.forEach((value, index) => {
+          if (value !== 0) {
+            const y = index % this.size;
+            const x = Math.floor(index / this.size);
+            const tile = new Tile({ x, y }, value);
+            this.grid.insertTile(tile);
+          }
+        });
+        this.score = data.score;
+        this.actuate();
+      }
+    });
+};
+
+function postMove(state, action, score) {
   fetch("http://localhost:5500/log", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ state, action })
+    body: JSON.stringify({ state, action, score })
   });
 }
 
@@ -246,6 +269,7 @@ GameManager.prototype.moveTile = function (tile, cell) {
 GameManager.prototype.move = function (direction) {
   // 0: up, 1: right, 2: down, 3: left
   const state = this.grid.cells.flat().map(cell => (cell ? cell.value : 0));
+  const oldscore = this.score;
 
   var self = this;
 
@@ -304,7 +328,7 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
-    postMove(state, direction);
+    postMove(state, direction, oldscore);
     this.lastDir = direction; // Save the last move direction
     this.addTile();
 
