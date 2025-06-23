@@ -2,6 +2,7 @@ let Imitationmodel;
 let RLmodel;
 const reinforcementCheckbox = document.querySelector(".rl-button");
 const imitationCheckbox = document.querySelector(".imitation-button");
+const strategyCheckbox = document.querySelector(".strategy-button");
 const speedButtons = {
   fast: document.querySelector(".full-speed-button"),
   normal: document.querySelector(".fast-speed-button"),
@@ -31,6 +32,28 @@ async function predictRLMove(grid) {
   const prediction = RLmodel.predict(inputTensor);
   const moveIndex = prediction.argMax(-1).dataSync()[0]; //get the index of the best move
   return moveIndex; // 0: up, 1: right, 2: down, 3: left
+}
+
+async function autoStrategyPlay(gameManager) {
+  if (!strategyCheckbox.checked) return;
+
+  const strategic = new Strategic(gameManager);
+  console.log("Strategic AI checked");
+  if (!gameManager.isGameTerminated()) {
+    console.log("game not over");
+    const move = strategic.nextMove();
+    console.log("move moved");
+    gameManager.move(move);
+
+    let delay = 200; // Speed checks
+    if (speedButtons.fast.checked) {
+      delay = 0;
+    } else if (speedButtons.slow.checked) {
+      delay = 500;
+    }
+
+    setTimeout(() => autoStrategyPlay(gameManager), delay); // Repeat
+  }
 }
 
 async function autoImitationPlay(gameManager) {
@@ -80,7 +103,11 @@ async function autoRLPlay(gameManager) {
 
 window.requestAnimationFrame(() => {
   const gameManager = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
-
+  strategyCheckbox.addEventListener("change", () => {
+    if (strategyCheckbox.checked) {
+      autoStrategyPlay(gameManager);
+    }
+  });
   imitationCheckbox.addEventListener("change", () => {
     if (imitationCheckbox.checked) {
       autoImitationPlay(gameManager);
