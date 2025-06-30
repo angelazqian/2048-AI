@@ -7,7 +7,7 @@ import webbrowser
 app = Flask(__name__)
 CORS(app)
 
-log_file = Path("data/easygame.jsonl")  #jsonl is apparently better for appending
+log_file = Path("data/raw/easygame.jsonl")  #jsonl is apparently better for appending
 log_file.parent.mkdir(parents=True, exist_ok=True)
 log_file.touch(exist_ok=True)
 
