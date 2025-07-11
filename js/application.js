@@ -1,6 +1,6 @@
 let Imitationmodel;
-let RLmodel;
-const reinforcementCheckbox = document.querySelector(".rl-button");
+// let RLmodel;
+// const reinforcementCheckbox = document.querySelector(".rl-button");
 const imitationCheckbox = document.querySelector(".imitation-button");
 const strategyCheckbox = document.querySelector(".strategy-button");
 const speedButtons = {
@@ -13,10 +13,10 @@ async function loadImitationModel() {
   Imitationmodel = await tf.loadGraphModel('imitation-learn/2048_imitation_tfjs/model.json');
   console.log("Imitation model loaded");
 }
-async function loadRLModel() {
-  RLmodel = await tf.loadGraphModel('reinforcement-learn/2048_rl_tfjs/model.json');
-  console.log("Reinforcement model loaded");
-}
+// async function loadRLModel() {
+//   RLmodel = await tf.loadGraphModel('reinforcement-learn/2048_rl_tfjs/model.json');
+//   console.log("Reinforcement model loaded");
+// }
 
 //predict the next move using the model
 async function predictImitationMove(grid) {
@@ -26,13 +26,13 @@ async function predictImitationMove(grid) {
   const moveIndex = prediction.argMax(-1).dataSync()[0]; //get the index of the best move
   return moveIndex; // 0: up, 1: right, 2: down, 3: left
 }
-async function predictRLMove(grid) {
-  const flattenedGrid = grid.cells.flat().map(cell => (cell ? cell.value : 0));
-  const inputTensor = tf.tensor([flattenedGrid], [1, 16], 'float32');
-  const prediction = RLmodel.predict(inputTensor);
-  const moveIndex = prediction.argMax(-1).dataSync()[0]; //get the index of the best move
-  return moveIndex; // 0: up, 1: right, 2: down, 3: left
-}
+// async function predictRLMove(grid) {
+//   const flattenedGrid = grid.cells.flat().map(cell => (cell ? cell.value : 0));
+//   const inputTensor = tf.tensor([flattenedGrid], [1, 16], 'float32');
+//   const prediction = RLmodel.predict(inputTensor);
+//   const moveIndex = prediction.argMax(-1).dataSync()[0]; //get the index of the best move
+//   return moveIndex; // 0: up, 1: right, 2: down, 3: left
+// }
 
 async function autoImitationPlay(gameManager) {
   if (!imitationCheckbox.checked) return;
@@ -57,26 +57,26 @@ async function autoImitationPlay(gameManager) {
     setTimeout(() => autoImitationPlay(gameManager), delay); //repeat
   }
 }
-async function autoRLPlay(gameManager) {
-  if (!reinforcementCheckbox.checked) return;
+// async function autoRLPlay(gameManager) {
+//   if (!reinforcementCheckbox.checked) return;
 
-  if (!gameManager.isGameTerminated()) {
-    const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
-    const move = await predictRLMove(gameManager.grid);
-    gameManager.move(move);
-    while (JSON.stringify(gameManager.grid.cells) === originalGridState) {
-      console.log("Model got stuck, picking a random move...");
-      gameManager.move(Math.floor(Math.random() * 4));
-    }
-    let delay = 200; //speed checks
-    if (speedButtons.fast.checked) {
-      delay = 0;
-    } else if (speedButtons.slow.checked) {
-      delay = 500;
-    }
-    setTimeout(() => autoRLPlay(gameManager), delay); //repeat
-  }
-}
+//   if (!gameManager.isGameTerminated()) {
+//     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
+//     const move = await predictRLMove(gameManager.grid);
+//     gameManager.move(move);
+//     while (JSON.stringify(gameManager.grid.cells) === originalGridState) {
+//       console.log("Model got stuck, picking a random move...");
+//       gameManager.move(Math.floor(Math.random() * 4));
+//     }
+//     let delay = 200; //speed checks
+//     if (speedButtons.fast.checked) {
+//       delay = 0;
+//     } else if (speedButtons.slow.checked) {
+//       delay = 500;
+//     }
+//     setTimeout(() => autoRLPlay(gameManager), delay); //repeat
+//   }
+// }
 
 async function autoStrategyPlay(gameManager) {
   if (!strategyCheckbox.checked) return;
@@ -107,16 +107,16 @@ window.requestAnimationFrame(() => {
       autoImitationPlay(gameManager);
     }
   });
-  reinforcementCheckbox.addEventListener("change", () => {
-    if (reinforcementCheckbox.checked) {
-      autoRLPlay(gameManager);
-    }
-  });
+  // reinforcementCheckbox.addEventListener("change", () => {
+  //   if (reinforcementCheckbox.checked) {
+  //     autoRLPlay(gameManager);
+  //   }
+  // });
   strategyCheckbox.addEventListener("change", () => {
     if (strategyCheckbox.checked) {
       autoStrategyPlay(gameManager);
     }
   });
   loadImitationModel();
-  loadRLModel();
+  // loadRLModel();
 });
