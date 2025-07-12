@@ -20,8 +20,8 @@ async function loadImitationModel() {
 
 //predict the next move using the model
 async function predictImitationMove(grid) {
-  const flattenedGrid = grid.cells.flat().map(cell => (cell ? Math.log2(cell.value) : 0));
-  const inputTensor = tf.tensor([flattenedGrid], [1, 16], 'float32');
+  const log2grid = grid.cells.map(row =>row.map(cell => (cell ? Math.log2(cell.value) : 0)));
+  const inputTensor = tf.tensor(log2grid, [4, 4], 'float32').reshape([1, 1, 4, 4]); //reshape for cnn
   const prediction = Imitationmodel.predict(inputTensor);
   const moveIndex = prediction.argMax(-1).dataSync()[0]; //get the index of the best move
   return moveIndex; // 0: up, 1: right, 2: down, 3: left
@@ -102,14 +102,20 @@ async function autoStrategyPlay(gameManager) {
 
 window.requestAnimationFrame(() => {
   const gameManager = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
-  imitationCheckbox.addEventListener("change", () => {
+  imitationCheckbox.addEventListener("change", async () => {
     if (imitationCheckbox.checked) {
+      if (!Imitationmodel) {
+        await loadImitationModel(); // ensure model is loaded
+      }
       autoImitationPlay(gameManager);
     }
   });
-  // reinforcementCheckbox.addEventListener("change", () => {
+  // reinforcementCheckbox.addEventListener("change", async () => {
   //   if (reinforcementCheckbox.checked) {
-  //     autoRLPlay(gameManager);
+  //     if (!RLmodel) {
+  //       await loadRLModel(); // ensure model is loaded
+  //     }
+  //     autonRLlay(gameManager);
   //   }
   // });
   strategyCheckbox.addEventListener("change", () => {
@@ -117,6 +123,4 @@ window.requestAnimationFrame(() => {
       autoStrategyPlay(gameManager);
     }
   });
-  loadImitationModel();
-  // loadRLModel();
 });
