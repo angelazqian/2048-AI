@@ -23,9 +23,11 @@ async function predictImitationMove(grid) {
   const log2grid = grid.cells.map(row =>row.map(cell => (cell ? Math.log2(cell.value) : 0)));
   const inputTensor = tf.tensor(log2grid, [4, 4], 'float32').reshape([1, 1, 4, 4]); //reshape for cnn
   const prediction = Imitationmodel.predict(inputTensor);
-  const moveIndex = prediction.argMax(-1).dataSync()[0]; //get the index of the best move
-  return moveIndex; // 0: up, 1: right, 2: down, 3: left
+  const probs = await prediction.data();
+  const rankedMoves = [...probs.keys()].sort((a, b) => probs[b] - probs[a]);  //spread iterable, sort moves by probability
+  return rankedMoves; // 0: up, 1: right, 2: down, 3: left
 }
+
 // async function predictRLMove(grid) {
 //   const flattenedGrid = grid.cells.flat().map(cell => (cell ? cell.value : 0));
 //   const inputTensor = tf.tensor([flattenedGrid], [1, 16], 'float32');
@@ -39,14 +41,13 @@ async function autoImitationPlay(gameManager) {
 
   if (!gameManager.isGameTerminated()) {
     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
-    const move = await predictImitationMove(gameManager.grid);
-    gameManager.move(move);
-    rot = 0;
-    order = [0,1,3,2];
-    while (JSON.stringify(gameManager.grid.cells) === originalGridState) {
-      console.log("Model got stuck, going through move rotation...");
-      gameManager.move(order[rot]);
-      rot++;
+    const rankedmoves = await predictImitationMove(gameManager.grid);
+    for (let move of rankedmoves) {
+      gameManager.move(move);
+      if (JSON.stringify(gameManager.grid.cells) !== originalGridState) {
+        break;
+      }
+      console.log("model got stuck lmao");
     }
     let delay = 200; //speed checks
     if (speedButtons.fast.checked) {
@@ -57,6 +58,7 @@ async function autoImitationPlay(gameManager) {
     setTimeout(() => autoImitationPlay(gameManager), delay); //repeat
   }
 }
+
 // async function autoRLPlay(gameManager) {
 //   if (!reinforcementCheckbox.checked) return;
 
