@@ -1,7 +1,6 @@
 let Imitationmodel;
 let Finemodel;
-// let RLmodel;
-// const reinforcementCheckbox = document.querySelector(".rl-button");
+
 const imitationCheckbox = document.querySelector(".imitation-button");
 const fineCheckbox = document.querySelector(".fine-button");
 const strategyCheckbox = document.querySelector(".strategy-button");
@@ -12,18 +11,13 @@ const speedButtons = {
 };
 
 async function loadImitationModel() {
-  Imitationmodel = await tf.loadGraphModel('imitation-learn/2048_imitation_tfjs/model.json');
+  Imitationmodel = await tf.loadGraphModel('model/2048_imitation_tfjs/model.json');
   console.log("Imitation model loaded");
 }
 async function loadFineModel() {
-  Finemodel = await tf.loadGraphModel('full-model/2048_fine_tfjs/model.json');
+  Finemodel = await tf.loadGraphModel('model/2048_fine_tfjs/model.json');
   console.log("Finetuned model loaded");
 }
-// async function loadRLModel() {
-//   RLmodel = await tf.loadGraphModel('reinforcement-learn/2048_rl_tfjs/model.json');
-//   console.log("Reinforcement model loaded");
-// }
-
 //predict the next move using the model
 async function predictImitationMove(grid) {
   const log2grid = grid.cells.map(row =>row.map(cell => (cell ? Math.log2(cell.value) : 0)));
@@ -41,14 +35,6 @@ async function predictFineMove(grid) {
   const rankedMoves = [...probs.keys()].sort((a, b) => probs[b] - probs[a]);  //spread iterable, sort moves by probability
   return rankedMoves; // 0: up, 1: right, 2: down, 3: left
 }
-
-// async function predictRLMove(grid) {
-//   const flattenedGrid = grid.cells.flat().map(cell => (cell ? cell.value : 0));
-//   const inputTensor = tf.tensor([flattenedGrid], [1, 16], 'float32');
-//   const prediction = RLmodel.predict(inputTensor);
-//   const moveIndex = prediction.argMax(-1).dataSync()[0]; //get the index of the best move
-//   return moveIndex; // 0: up, 1: right, 2: down, 3: left
-// }
 
 async function autoImitationPlay(gameManager) {
   if (!imitationCheckbox.checked) return;
@@ -95,26 +81,6 @@ async function autoFinePlay(gameManager) {
   }
 }
 
-// async function autoRLPlay(gameManager) {
-//   if (!reinforcementCheckbox.checked) return;
-
-//   if (!gameManager.isGameTerminated()) {
-//     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
-//     const move = await predictRLMove(gameManager.grid);
-//     gameManager.move(move);
-//     while (JSON.stringify(gameManager.grid.cells) === originalGridState) {
-//       console.log("Model got stuck, picking a random move...");
-//       gameManager.move(Math.floor(Math.random() * 4));
-//     }
-//     let delay = 200; //speed checks
-//     if (speedButtons.fast.checked) {
-//       delay = 0;
-//     } else if (speedButtons.slow.checked) {
-//       delay = 500;
-//     }
-//     setTimeout(() => autoRLPlay(gameManager), delay); //repeat
-//   }
-// }
 
 async function autoStrategyPlay(gameManager) {
   if (!strategyCheckbox.checked) return;
@@ -157,14 +123,7 @@ window.requestAnimationFrame(() => {
       autoFinePlay(gameManager);
     }
   });
-  // reinforcementCheckbox.addEventListener("change", async () => {
-  //   if (reinforcementCheckbox.checked) {
-  //     if (!RLmodel) {
-  //       await loadRLModel(); // ensure model is loaded
-  //     }
-  //     autonRLlay(gameManager);
-  //   }
-  // });
+
   strategyCheckbox.addEventListener("change", () => {
     if (strategyCheckbox.checked) {
       autoStrategyPlay(gameManager);
