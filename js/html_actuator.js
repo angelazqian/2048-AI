@@ -110,8 +110,11 @@ HTMLActuator.prototype.updateScore = function (score) {
 
   var difference = score - this.score;
   this.score = score;
-
-  this.scoreContainer.textContent = this.score;
+  if (this.score > 1000000)
+    this.scoreContainer.textContent = (this.score / 1000000).toFixed(1) + "M";
+  else if (this.score > 1000)
+    this.scoreContainer.textContent = (this.score / 1000).toFixed(1) + "K";
+  else this.scoreContainer.textContent = this.score;
 
   if (difference > 0) {
     var addition = document.createElement("div");
@@ -123,6 +126,12 @@ HTMLActuator.prototype.updateScore = function (score) {
 };
 
 HTMLActuator.prototype.updateBestScore = function (bestScore) {
+  this.bestScore = bestScore;
+  if (this.bestScore > 1000000)
+    this.bestContainer.textContent = (this.bestScore / 1000000).toFixed(1) + "M";
+  else if (this.bestScore > 1000)
+    this.bestContainer.textContent = (this.bestScore / 1000).toFixed(1) + "K";
+  else this.bestContainer.textContent = this.bestscore;
   this.bestContainer.textContent = bestScore;
 };
 
@@ -132,6 +141,9 @@ HTMLActuator.prototype.message = function (won) {
 
   this.messageContainer.classList.add(type);
   this.messageContainer.getElementsByTagName("p")[0].textContent = message;
+  if (!won) {
+    this.messageContainer.querySelector(".keep-playing-button").style.display = "none";
+  }
   if (won) {
     var keepPlayingButton = this.messageContainer.querySelector(".keep-playing-button");
     keepPlayingButton.textContent = `Play for ${this.targetTile}!`;
