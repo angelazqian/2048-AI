@@ -276,7 +276,8 @@ GameManager.prototype.setup = function () {
     this.grid        = new Grid(previousState.grid.size,
                                 previousState.grid.cells); // Reload grid
     
-    this.targetTile = Math.max(this.grid ? this.grid.largestTile()*2 : 0, 2048);
+    this.targetTile  = Math.max(this.grid ? this.grid.largestTile()*2 : 0, 2048);
+    this.sum         = this.grid.sum();
     this.score       = previousState.score;
     this.over        = previousState.over;
     this.won         = previousState.won;
@@ -284,7 +285,8 @@ GameManager.prototype.setup = function () {
   } else {
     this.grid        = new Grid(this.size);
     this.score       = 0;
-    this.targetTile = 2048; // Default target tile
+    this.targetTile  = 2048; // Default target tile
+    this.sum         = 0;
     this.over        = false;
     this.won         = false;
     this.keepPlaying = false;
@@ -302,20 +304,20 @@ GameManager.prototype.addStartTiles = function () {
   for (var i = 0; i < this.startTiles; i++) {
     this.addTile();
   }
-  // this.grid.insertTile(new Tile({x: 3, y: 0}, 65536));
-  // this.grid.insertTile(new Tile({x: 2, y: 0}, 32768));
-  // this.grid.insertTile(new Tile({x: 1, y: 0}, 16384));
-  // this.grid.insertTile(new Tile({x: 0, y: 0}, 8192));
+  // this.grid.insertTile(new Tile({x: 3, y: 0}, 131072));
+  // this.grid.insertTile(new Tile({x: 2, y: 0}, 65536));
+  // this.grid.insertTile(new Tile({x: 1, y: 0}, 32768));
+  // this.grid.insertTile(new Tile({x: 0, y: 0}, 16384));
 
-  // this.grid.insertTile(new Tile({x: 0, y: 1}, 4096));
-  // this.grid.insertTile(new Tile({x: 1, y: 1}, 2048));
-  // this.grid.insertTile(new Tile({x: 2, y: 1}, 1024));
-  // this.grid.insertTile(new Tile({x: 3, y: 1}, 512));
+  // this.grid.insertTile(new Tile({x: 0, y: 1}, 8192));
+  // this.grid.insertTile(new Tile({x: 1, y: 1}, 4096));
+  // this.grid.insertTile(new Tile({x: 2, y: 1}, 2048));
+  // this.grid.insertTile(new Tile({x: 3, y: 1}, 1024));
 
-  // this.grid.insertTile(new Tile({x: 3, y: 2}, 256));
-  // this.grid.insertTile(new Tile({x: 2, y: 2}, 128));
-  // this.grid.insertTile(new Tile({x: 1, y: 2}, 64));
-  // this.grid.insertTile(new Tile({x: 0, y: 2}, 32));
+  // this.grid.insertTile(new Tile({x: 3, y: 2}, 512));
+  // this.grid.insertTile(new Tile({x: 2, y: 2}, 256));
+  // this.grid.insertTile(new Tile({x: 1, y: 2}, 128));
+  // this.grid.insertTile(new Tile({x: 0, y: 2}, 64));
 
   // this.grid.insertTile(new Tile({x: 0, y: 3}, 2));
 };
@@ -367,23 +369,17 @@ GameManager.prototype.addEasyTile = function () {
     }
     if (this.grid.availableCells().length ==1) {
       //possible game over condition, if no surrounding 2's then spawn a 4
-      //if the 4 won't save you, use a 2, you're dead anyway
       var cell = avail[0];
-      var twos = 0;
-      var fours = 0;
+      value = 4;
       for (var i = 0; i < 4; i++) {
         var dir = this.getVector(i);
         var cell2 = {x: cell.x + dir.x, y: cell.y + dir.y};
         if (this.grid.withinBounds(cell2)) {
           var tile = this.grid.cellContent(cell2);
           if (tile.value == 2)
-            twos++;
-          else if (tile.value == 4)
-            fours++;
+            value = 2;
         }
       }
-      if (!twos && fours)
-        value = 4;
     }
 
     var bestval = 131073; //2^17+1, guaranteed to be biggest
@@ -436,7 +432,8 @@ GameManager.prototype.actuate = function () {
     won:        this.won,
     bestScore:  this.storageManager.getBestScore(),
     terminated: this.isGameTerminated(),
-    targetTile: this.targetTile
+    targetTile: this.targetTile,
+    sum:        this.grid.sum(),
   });
 
 };

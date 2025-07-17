@@ -28,6 +28,19 @@ Grid.prototype.largestTile = function () {
   return ans;
 };
 
+Grid.prototype.sum = function () {
+  let ans = 0;
+  for (var x = 0; x < this.size; x++) {
+    for (var y = 0; y < this.size; y++) {
+      var tile = this.cells[x][y];
+      if (tile) {
+        ans += tile.value;
+      }
+    }
+  }
+  return ans;
+};
+
 Grid.prototype.fromState = function (state) {
   var cells = [];
 
