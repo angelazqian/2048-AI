@@ -4,6 +4,7 @@ let Finemodel;
 const imitationCheckbox = document.querySelector(".imitation-button");
 const fineCheckbox = document.querySelector(".fine-button");
 const strategyCheckbox = document.querySelector(".strategy-button");
+const combCheckbox = document.querySelector(".comb-button");
 const speedButtons = {
   fast: document.querySelector(".full-speed-button"),
   normal: document.querySelector(".fast-speed-button"),
@@ -103,7 +104,32 @@ async function autoStrategyPlay(gameManager) {
     setTimeout(() => autoStrategyPlay(gameManager), delay); // Repeat
   }
 }
+async function autoCombPlay(gameManager) {
+  if (!combCheckbox.checked) return;
 
+  if (!gameManager.isGameTerminated()) {
+    const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
+    const rankedmoves = await predictImitationMove(gameManager.grid);
+    for (let move of rankedmoves) {
+      gameManager.move(move);
+      if (JSON.stringify(gameManager.grid.cells) !== originalGridState) {
+        break;
+      }
+      console.log("comb got stuck, going strategic")
+      const strategic = new Strategic(gameManager);
+      move = strategic.nextMove();
+      gameManager.move(move);
+      break;
+    }
+    let delay = 200; //speed checks
+    if (speedButtons.fast.checked) {
+      delay = 0;
+    } else if (speedButtons.slow.checked) {
+      delay = 500;
+    }
+    setTimeout(() => autoCombPlay(gameManager), delay); //repeat
+  }
+}
 window.requestAnimationFrame(() => {
   const gameManager = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
   imitationCheckbox.addEventListener("change", async () => {
@@ -112,6 +138,15 @@ window.requestAnimationFrame(() => {
         await loadImitationModel(); // ensure model is loaded
       }
       autoImitationPlay(gameManager);
+    }
+  });
+
+  combCheckbox.addEventListener("change", async () => {
+    if (combCheckbox.checked) {
+      if (!Imitationmodel) {
+        await loadImitationModel(); // ensure model is loaded
+      }
+      autoCombPlay(gameManager);
     }
   });
 
