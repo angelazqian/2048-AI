@@ -10,6 +10,44 @@ const speedButtons = {
   slow: document.querySelector(".slow-speed-button"),
 };
 
+function rotategrid(grid) {
+  const ans = Array(4).fill().map(() => Array(4).fill(0));
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      ans[j][3-i] = grid[i][j];
+    }
+  }
+  return ans;
+}
+function mirrordiag(grid) {
+  const ans = Array(4).fill().map(() => Array(4).fill(0));
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      ans[3-j][3-i] = grid[i][j];
+    }
+  }
+  return ans;
+}
+function largestpos(grid) {
+  let biggest = 0;  //get coords of top 2 biggest
+  let bigger = 0;
+  let one = {row: 0, col: 0};
+  let two = {row: 0, col: 0};
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (grid[i][j] > biggest) {
+        biggest = grid[i][j];
+        one = {row: i, col: j};
+      }
+      else if (grid[i][j] > bigger) {
+        bigger = grid[i][j];
+        two = {row: i, col: j};
+      }
+    }
+  }
+  return {one, two};
+}
+
 async function loadImitationModel() {
   Imitationmodel = await tf.loadGraphModel('model/2048_imitation_tfjs/model.json');
   console.log("Imitation model loaded");
@@ -20,19 +58,63 @@ async function loadFineModel() {
 }
 //predict the next move using the model
 async function predictImitationMove(grid) {
+  let {one, two} = largestpos(grid.cells);
+  let rots = 0;
+  let mirror = false;
+  if (one.row > 1)  //find how many times to rotate
+    rots = 2;
+  if ((one.col > 1 && one.row > 1) || (one.col < 2 && one.row < 2))
+    rots += 1;
+  for (let i = 0; i < rots; i++)
+    grid.cells = rotategrid(grid.cells);
+  ({one, two} = largestpos(grid.cells));
+  if (two.row + two.col > 3){
+    mirror = true;
+    grid.cells = mirrordiag(grid.cells);
+  }
+
   const log2grid = grid.cells.map(row =>row.map(cell => (cell ? Math.log2(cell.value) : 0)));
   const inputTensor = tf.tensor(log2grid, [4, 4], 'float32').reshape([1, 1, 4, 4]); //reshape for cnn
   const prediction = Imitationmodel.predict(inputTensor);
   const probs = await prediction.data();
-  const rankedMoves = [...probs.keys()].sort((a, b) => probs[b] - probs[a]);  //spread iterable, sort moves by probability
-  return rankedMoves; // 0: up, 1: right, 2: down, 3: left
+  let rankedMoves = [...probs.keys()].sort((a, b) => probs[b] - probs[a]);  //spread iterable, sort moves by probability
+  if (mirror) {
+    rankedMoves = rankedMoves.map(move => (move - 2*(move % 2) + 1)); //mirror moves
+    grid.cells = mirrordiag(grid.cells); //mirror grid back
+  }
+  rankedMoves = rankedMoves.map(move => (move + 4 - rots) % 4);
+  for (let i = 0; i < 4 - rots; i++)
+    grid.cells = rotategrid(grid.cells); //rotate grid back to original orientation
+  return rankedMoves;
 }
 async function predictFineMove(grid) {
+  let {one, two} = largestpos(grid.cells);
+  let rots = 0;
+  let mirror = false;
+  if (one.row > 1)  //find how many times to rotate
+    rots = 2;
+  if ((one.col > 1 && one.row > 1) || (one.col < 2 && one.row < 2))
+    rots += 1;
+  for (let i = 0; i < rots; i++)
+    grid.cells = rotategrid(grid.cells);
+  ({one, two} = largestpos(grid.cells));
+  if (two.row + two.col > 3){
+    mirror = true;
+    grid.cells = mirrordiag(grid.cells);
+  }
+
   const log2grid = grid.cells.map(row =>row.map(cell => (cell ? Math.log2(cell.value) : 0)));
   const inputTensor = tf.tensor(log2grid, [4, 4], 'float32').reshape([1, 1, 4, 4]); //reshape for cnn
   const prediction = Finemodel.predict(inputTensor);
   const probs = await prediction.data();
   const rankedMoves = [...probs.keys()].sort((a, b) => probs[b] - probs[a]);  //spread iterable, sort moves by probability
+  if (mirror) {
+    rankedMoves = rankedMoves.map(move => (move - 2*(move % 2) + 1)); //mirror moves
+    grid.cells = mirrordiag(grid.cells); //mirror grid back
+  }
+  rankedMoves = rankedMoves.map(move => (move + 4 - rots) % 4);
+  for (let i = 0; i < 4 - rots; i++)
+    grid.cells = rotategrid(grid.cells); //rotate grid back to original orientation
   return rankedMoves; // 0: up, 1: right, 2: down, 3: left
 }
 
