@@ -132,7 +132,7 @@ HTMLActuator.prototype.updateBestScore = function (bestScore) {
     this.bestContainer.textContent = (this.bestScore / 1000000).toFixed(1) + "M";
   else if (this.bestScore > 1000)
     this.bestContainer.textContent = (this.bestScore / 1000).toFixed(1) + "K";
-  else this.bestContainer.textContent = this.bestscore;
+  else this.bestContainer.textContent = this.bestScore;
 };
 
 HTMLActuator.prototype.message = function (won) {
