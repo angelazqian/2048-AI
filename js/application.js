@@ -3,8 +3,8 @@ let Finemodel;
 
 const imitationCheckbox = document.querySelector(".imitation-button");
 const fineCheckbox = document.querySelector(".fine-button");
-const strategyCheckbox = document.querySelector(".strategy-button");
-const combCheckbox = document.querySelector(".comb-button");
+// const strategyCheckbox = document.querySelector(".strategy-button");
+// const combCheckbox = document.querySelector(".comb-button");
 const speedButtons = {
   fast: document.querySelector(".full-speed-button"),
   normal: document.querySelector(".fast-speed-button"),
@@ -83,53 +83,53 @@ async function autoFinePlay(gameManager) {
 }
 
 
-async function autoStrategyPlay(gameManager) {
-  if (!strategyCheckbox.checked) return;
+// async function autoStrategyPlay(gameManager) {
+//   if (!strategyCheckbox.checked) return;
 
-  const strategic = new Strategic(gameManager);
-  console.log("Strategic AI checked");
-  if (!gameManager.isGameTerminated()) {
-    console.log("game not over");
-    const move = strategic.nextMove();
-    console.log("move moved");
-    gameManager.move(move);
+//   const strategic = new Strategic(gameManager);
+//   console.log("Strategic AI checked");
+//   if (!gameManager.isGameTerminated()) {
+//     console.log("game not over");
+//     const move = strategic.nextMove();
+//     console.log("move moved");
+//     gameManager.move(move);
 
-    let delay = 200; // Speed checks
-    if (speedButtons.fast.checked) {
-      delay = 0;
-    } else if (speedButtons.slow.checked) {
-      delay = 500;
-    }
+//     let delay = 200; // Speed checks
+//     if (speedButtons.fast.checked) {
+//       delay = 0;
+//     } else if (speedButtons.slow.checked) {
+//       delay = 500;
+//     }
 
-    setTimeout(() => autoStrategyPlay(gameManager), delay); // Repeat
-  }
-}
-async function autoCombPlay(gameManager) {
-  if (!combCheckbox.checked) return;
+//     setTimeout(() => autoStrategyPlay(gameManager), delay); // Repeat
+//   }
+// }
+// async function autoCombPlay(gameManager) {
+//   if (!combCheckbox.checked) return;
 
-  if (!gameManager.isGameTerminated()) {
-    const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
-    const rankedmoves = await predictImitationMove(gameManager.grid);
-    for (let move of rankedmoves) {
-      gameManager.move(move);
-      if (JSON.stringify(gameManager.grid.cells) !== originalGridState) {
-        break;
-      }
-      console.log("comb got stuck, going strategic")
-      const strategic = new Strategic(gameManager);
-      move = strategic.nextMove();
-      gameManager.move(move);
-      break;
-    }
-    let delay = 200; //speed checks
-    if (speedButtons.fast.checked) {
-      delay = 0;
-    } else if (speedButtons.slow.checked) {
-      delay = 500;
-    }
-    setTimeout(() => autoCombPlay(gameManager), delay); //repeat
-  }
-}
+//   if (!gameManager.isGameTerminated()) {
+//     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
+//     const rankedmoves = await predictImitationMove(gameManager.grid);
+//     for (let move of rankedmoves) {
+//       gameManager.move(move);
+//       if (JSON.stringify(gameManager.grid.cells) !== originalGridState) {
+//         break;
+//       }
+//       console.log("comb got stuck, going strategic")
+//       const strategic = new Strategic(gameManager);
+//       move = strategic.nextMove();
+//       gameManager.move(move);
+//       break;
+//     }
+//     let delay = 200; //speed checks
+//     if (speedButtons.fast.checked) {
+//       delay = 0;
+//     } else if (speedButtons.slow.checked) {
+//       delay = 500;
+//     }
+//     setTimeout(() => autoCombPlay(gameManager), delay); //repeat
+//   }
+// }
 window.requestAnimationFrame(() => {
   const gameManager = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
   imitationCheckbox.addEventListener("change", async () => {
@@ -141,14 +141,14 @@ window.requestAnimationFrame(() => {
     }
   });
 
-  combCheckbox.addEventListener("change", async () => {
-    if (combCheckbox.checked) {
-      if (!Imitationmodel) {
-        await loadImitationModel(); // ensure model is loaded
-      }
-      autoCombPlay(gameManager);
-    }
-  });
+  // combCheckbox.addEventListener("change", async () => {
+  //   if (combCheckbox.checked) {
+  //     if (!Imitationmodel) {
+  //       await loadImitationModel(); // ensure model is loaded
+  //     }
+  //     autoCombPlay(gameManager);
+  //   }
+  // });
 
   fineCheckbox.addEventListener("change", async () => {
     if (fineCheckbox.checked) {
@@ -159,9 +159,9 @@ window.requestAnimationFrame(() => {
     }
   });
 
-  strategyCheckbox.addEventListener("change", () => {
-    if (strategyCheckbox.checked) {
-      autoStrategyPlay(gameManager);
-    }
-  });
+  // strategyCheckbox.addEventListener("change", () => {
+  //   if (strategyCheckbox.checked) {
+  //     autoStrategyPlay(gameManager);
+  //   }
+  // });
 });
