@@ -90,8 +90,11 @@ GameManager.prototype.addStartTiles = function () {
 
 GameManager.prototype.addTile = function () {
   var easyModeCheckbox = document.querySelector(".easy-tile-button");
+  var hardModeCheckbox = document.querySelector(".hard-tile-button");
   if (easyModeCheckbox && easyModeCheckbox.checked) {
     this.addEasyTile();
+  } else if (hardModeCheckbox && hardModeCheckbox.checked) {
+    this.addHardTile();
   } else {
     this.addRandomTile();
   }
@@ -109,7 +112,6 @@ GameManager.prototype.addRandomTile = function () {
 // Adds a tile in optimal position
 GameManager.prototype.addEasyTile = function () {
   if (this.grid.cellsAvailable()) {
-    //TODO:
     //current strat: always add a tile w value 2, but add tile of 4 is 2 will result in game over
     //this makes gameplay slower, but yields a higher score
     //add tiles to the border opposite of the last move, to avoid rectangle formation
@@ -179,6 +181,174 @@ GameManager.prototype.addEasyTile = function () {
   }
 };
 
+function mostCommon(arr) {
+  const freq = [0, 0, 0, 0];
+  arr.forEach(v => freq[v]++);
+  return freq.indexOf(Math.max(...freq));
+}
+
+// Adds a tile in worst position
+GameManager.prototype.addHardTile = function () {
+  if (this.grid.cellsAvailable()) {
+    //create brick as often as possible, if not, add tile next to biggest tile available
+    //when adding tile next to biggest, put priority on unmergeable tiles
+    //if tie, put priority on last direction
+    //make checkerboarded 2424 board when possible
+
+    var value = 2;
+    var vector = this.getVector(this.lastDir);
+    if (this.grid.availableCells().length == 2 && this.grid.largestTile() == 4) {
+      for (var i = 0; i < 4; i++) {
+        var cell = {x: 3*Math.floor(i/2), y: 3*(i%2)};  //spawn in corner
+        console.log(cell);
+        if (this.grid.cellAvailable(cell)) {
+          for (var j = 0; j < 4; j++) {
+            var dir = this.getVector(j);
+            var cell2 = {x: cell.x + dir.x, y: cell.y + dir.y};
+            if (this.grid.withinBounds(cell2) && this.grid.cellContent(cell2)) {
+              console.log(cell2);
+              this.grid.insertTile(new Tile(cell, this.grid.cellContent(cell2).value));
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    var avail = [];  //only look at edge along last direction, get available cells
+    for (var i = 0; i < this.size; i++) {
+      var cell = {x: i, y: i};
+      if (this.lastDir == 0)
+        cell.y = this.size - 1;
+      else if (this.lastDir == 1)
+        cell.x = 0;
+      else if (this.lastDir == 2)
+        cell.y = 0;
+      else if (this.lastDir == 3)
+        cell.x = this.size - 1;
+      if (this.grid.cellAvailable(cell)) {
+        while (this.grid.withinBounds(cell) && this.grid.cellAvailable(cell)) {
+          cell.x += vector.x;
+          cell.y += vector.y;
+        }
+        cell.x -= vector.x;
+        cell.y -= vector.y;
+        avail.push(cell);
+      }
+    }
+    if (avail.length == 4) {    //check for rectangle
+      const axis = (this.lastDir % 2) ? 'x' : 'y';  //if lastDir is 1 or 3, axis is x, else y
+      const dominant = mostCommon(avail.map(p => p[axis]));
+      const off = avail.filter(p => p[axis] !== dominant);  //check for conformity
+      if (off.length == 1) { 
+        if (off[0][axis] == dominant + vector[axis]) {  //only one off from rectangle! rejoice
+          var twos = 0;
+          var fours = 0;
+          for (var i = 0; i < 4; i++) {
+            var dir = this.getVector(i);
+            var cell2 = {x: off[0].x + dir.x, y: off[0].y + dir.y};
+            if (this.grid.withinBounds(cell2)) {
+              var tile = this.grid.cellContent(cell2);
+              if (tile && tile.value == 2)
+                twos++;
+              else if (tile && tile.value == 4)
+                fours++;
+            }
+          }
+          if (!twos){
+            this.grid.insertTile(new Tile(off[0], 2));
+            return;
+          }
+          if (!fours) {
+            this.grid.insertTile(new Tile(off[0], 4));
+            return;
+          } //if we got here, proceed as normal
+        }
+      }
+    }
+
+    avail = this.grid.availableCells()
+    var bestval = 0; //look for biggest tile neighboring available cell, with a bias from last dir
+    var bestchoices = [];
+    var merger = true;  //true if must merge into neighbor, false if not
+    for (var i = 0; i < avail.length; i++) {  
+      var cell = avail[i];
+      var tile = new Tile(cell, 2);
+      var twos = 0;
+      var fours = 0;
+      var maxval = 0;
+      for (var j = 0; j < 4; j++) {
+        var dir = this.getVector(j);
+        var cell2 = {x: cell.x + dir.x, y: cell.y + dir.y};
+        if (this.grid.withinBounds(cell2)) {  //bet biggest immediate neighbor
+          var other = this.grid.cellContent(cell2);
+          if (other && other.value > maxval) {
+            maxval = other.value;
+          }
+        }
+        while (this.grid.withinBounds(cell2) && this.grid.cellAvailable(cell2)) { //ignore empty tiles, check if mergeable
+          cell2.x += dir.x;
+          cell2.y += dir.y;
+        }
+        if (this.grid.withinBounds(cell2)) {
+          var other = this.grid.cellContent(cell2);
+          if (other && other.value == 2)
+            twos++;
+          else if (other && other.value == 4)
+            fours++;
+        }
+      }
+      if (!fours)
+        tile = new Tile(cell, 4);
+      if (!twos)
+        tile = new Tile(cell, 2);
+
+      if (!merger && (!twos || !fours)) { //previously couldn't merge, still can't
+        if (maxval > bestval) {
+          bestval = maxval;
+          bestchoices = [tile];
+        } else if (maxval == bestval) {
+          bestchoices.push(tile);
+        }
+      }
+      else if (merger && (!twos || !fours)) {  //previously could merge, but now can't
+        merger = false;
+        bestval = maxval;
+        bestchoices = [tile];
+      }
+      else if (merger && (twos && fours)) {  //previously could merge, still can
+        if (maxval > bestval) {
+          bestval = maxval;
+          bestchoices = [tile];
+        } else if (maxval == bestval) {
+          bestchoices.push(tile);
+        }
+      }    //if previously couldn't merge, but now can, do nothing
+    }
+    if (bestchoices.length > 1) {
+      avail = [];   //bias towards last direction
+      bestval = 0;
+      for (var i = 0; i < bestchoices.length; i++) {
+        var cell = bestchoices[i];
+        var cell2 = {x: cell.x + vector.x, y: cell.y + vector.y};
+        if (this.grid.withinBounds(cell2) && this.grid.cellContent(cell2)) {
+          if (this.grid.cellContent(cell2).value > bestval) {
+            bestval = this.grid.cellContent(cell2).value;
+            avail = [bestchoices[i]];
+          }
+          else if (this.grid.cellContent(cell2).value == bestval) {
+            avail.push(bestchoices[i]);
+          }
+        }
+      }
+      if (avail.length > 0) {
+        bestchoices = avail; //use the ones with best neighbor
+      }
+    }
+    var cellindex = Math.floor(Math.random() * bestchoices.length);
+    this.grid.insertTile(bestchoices[cellindex]);
+  }
+};
 // Sends the updated grid to the actuator
 GameManager.prototype.actuate = function () {
   if (this.storageManager.getBestScore() < this.score) {
