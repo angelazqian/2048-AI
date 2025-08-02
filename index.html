@@ -92,9 +92,11 @@
       <label title="Trained off real games!"><input type="radio" name="ai-mode" class="imitation-button" />Imitation</label><br />
       <label title="Finetuned through self-play"><input type="radio" name="ai-mode" class="fine-button" />Reinforcement</label><br />
       <div class="ai-panel-header">Speed:</div>
-      <label><input type="radio" name="ai-speed" class="full-speed-button" />Fast</label><br />
-      <label><input type="radio" name="ai-speed" class="fast-speed-button" checked />Normal</label><br />
-      <label><input type="radio" name="ai-speed" class="slow-speed-button" />Slow</label><br />
+      <input type="range" id="ai-speed-slider" name="ai-speed" min="0" max="100" value="50" step="1" />
+      <div class="speed-labels">
+        <span>Slow</span>
+        <span>Fast</span>
+      </div>
       <div class="ai-panel-header">Tile generator:</div>
       <label><input type="radio" name="ai-tilegen" class="easy-tile-button" />Easy Mode</label><br />
       <label><input type="radio" name="ai-tilegen" class="random-tile-button" checked />Normal</label><br />

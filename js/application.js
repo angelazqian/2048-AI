@@ -3,11 +3,7 @@ let Finemodel;
 
 const imitationCheckbox = document.querySelector(".imitation-button");
 const fineCheckbox = document.querySelector(".fine-button");
-const speedButtons = {
-  fast: document.querySelector(".full-speed-button"),
-  normal: document.querySelector(".fast-speed-button"),
-  slow: document.querySelector(".slow-speed-button"),
-};
+const speedSlider = document.getElementById('ai-speed-slider');
 
 async function loadImitationModel() {
   Imitationmodel = await tf.loadGraphModel('model/2048_imitation_tfjs/model.json');
@@ -37,7 +33,8 @@ async function predictFineMove(grid) {
 
 async function autoImitationPlay(gameManager) {
   if (!imitationCheckbox.checked) return;
-
+  const sliderValue = parseInt(speedSlider.value);
+  const delay = Math.max(0, 500 - (sliderValue * 5));
   if (!gameManager.isGameTerminated()) {
     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
     const rankedmoves = await predictImitationMove(gameManager.grid);
@@ -48,18 +45,13 @@ async function autoImitationPlay(gameManager) {
       }
       console.log("model got stuck lmao");
     }
-    let delay = 200; //speed checks
-    if (speedButtons.fast.checked) {
-      delay = 0;
-    } else if (speedButtons.slow.checked) {
-      delay = 500;
-    }
     setTimeout(() => autoImitationPlay(gameManager), delay); //repeat
   }
 }
 async function autoFinePlay(gameManager) {
   if (!fineCheckbox.checked) return;
-
+  const sliderValue = parseInt(speedSlider.value);
+  const delay = Math.max(0, 500 - (sliderValue * 5));
   if (!gameManager.isGameTerminated()) {
     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
     const rankedmoves = await predictFineMove(gameManager.grid);
@@ -69,12 +61,6 @@ async function autoFinePlay(gameManager) {
         break;
       }
       console.log("model got stuck lmao");
-    }
-    let delay = 200; //speed checks
-    if (speedButtons.fast.checked) {
-      delay = 0;
-    } else if (speedButtons.slow.checked) {
-      delay = 500;
     }
     setTimeout(() => autoFinePlay(gameManager), delay); //repeat
   }
