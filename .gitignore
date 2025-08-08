@@ -4,3 +4,4 @@ venv/
 tfenv/
 tfjsenv/
 data/
+.DS_Store
