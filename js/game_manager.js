@@ -89,13 +89,11 @@ GameManager.prototype.addStartTiles = function () {
 };
 
 GameManager.prototype.addTile = function () {
-  var easyModeCheckbox = document.querySelector(".easy-tile-button");
-  var hardModeCheckbox = document.querySelector(".hard-tile-button");
-  if (easyModeCheckbox && easyModeCheckbox.checked) {
+  var value = Math.random();
+  if (value > 0.5) {
     this.addEasyTile();
-  } else if (hardModeCheckbox && hardModeCheckbox.checked) {
-    this.addHardTile();
-  } else {
+  }
+  else {
     this.addRandomTile();
   }
 }
