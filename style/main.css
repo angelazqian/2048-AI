@@ -789,7 +789,7 @@ input[type="text"].state-input {
 }
 
 .game-explanation {
-  margin-top: 180px; }
+  margin-top: 380px; }
 
 .sharing {
   margin-top: 20px;
@@ -826,7 +826,7 @@ input[type="text"].state-input {
     margin-bottom: 5px;
   }
   .game-explanation {
-    margin-top: 20px; }
+    margin-top: 70px; }
 }
 @media screen and (max-width: 520px) {
   .ai-panel {

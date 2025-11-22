@@ -3,7 +3,6 @@ let Finemodel;
 
 const imitationCheckbox = document.querySelector(".imitation-button");
 const fineCheckbox = document.querySelector(".fine-button");
-const speedSlider = document.getElementById('ai-speed-slider');
 
 async function loadImitationModel() {
   Imitationmodel = await tf.loadGraphModel('model/2048_imitation_tfjs/model.json');
@@ -28,8 +27,7 @@ async function predictmove(grid, mode) {
 async function autoplay(gameManager, mode) {
   if (mode === "imitation" && !imitationCheckbox.checked) return;
   if (mode === "fine" && !fineCheckbox.checked) return;
-  const sliderValue = parseInt(speedSlider.value);
-  const delay = Math.max(0, 500 - (sliderValue * 5));
+  const delay =500;
   if (!gameManager.isGameTerminated()) {
     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
     const rankedmoves = await predictmove(gameManager.grid, mode);
