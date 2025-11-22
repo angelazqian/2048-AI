@@ -25,10 +25,10 @@ async function predictmove(grid, mode) {
 }
 
 async function autoplay(gameManager, mode) {
-  if (mode === "imitation" && !imitationCheckbox.checked) return;
-  if (mode === "fine" && !fineCheckbox.checked) return;
-  const delay =500;
-  if (!gameManager.isGameTerminated()) {
+  // if (mode === "imitation" && !imitationCheckbox.checked) return;
+  // if (mode === "fine" && !fineCheckbox.checked) return;
+  const delay =400;
+  // if (!gameManager.isGameTerminated()) {
     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
     const rankedmoves = await predictmove(gameManager.grid, mode);
     for (let move of rankedmoves) {
@@ -38,27 +38,18 @@ async function autoplay(gameManager, mode) {
       }
       console.log("model got stuck lmao");
     }
-    if (mode === "imitation") setTimeout(() => autoplay(gameManager, "imitation"), delay); //repeat
+    // if (mode === "imitation") setTimeout(() => autoplay(gameManager, "imitation"), delay); //repeat
     if (mode === "fine") setTimeout(() => autoplay(gameManager, "fine"), delay);
-  }
+  // }
+  // else {
+  //   console.log("Game Over");
+  // }
 }
 
-window.requestAnimationFrame(() => {
+window.requestAnimationFrame(async () => {
   const gameManager = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
-  imitationCheckbox.addEventListener("change", async () => {
-    if (imitationCheckbox.checked) {
-      if (!Imitationmodel) {
-        await loadImitationModel(); // ensure model is loaded
-      }
-      autoplay(gameManager, "imitation");
-    }
-  });
-  fineCheckbox.addEventListener("change", async () => {
-    if (fineCheckbox.checked) {
-      if (!Finemodel) {
-        await loadFineModel(); // ensure model is loaded
-      }
-      autoplay(gameManager, "fine");
-    }
-  });
+  if (!Finemodel) {
+    await loadFineModel();
+  }
+  autoplay(gameManager, "fine");
 });

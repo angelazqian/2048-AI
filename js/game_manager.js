@@ -15,7 +15,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
 // Restart the game
 GameManager.prototype.restart = function () {
-  document.querySelector(".player-button").checked = true; // Reset player mode
+  // document.querySelector(".player-button").checked = true; // Reset player mode
   this.storageManager.clearGameState();
   this.actuator.continueGame(); // Clear the game won/lost message
   this.setup();
