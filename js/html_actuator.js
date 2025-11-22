@@ -155,6 +155,11 @@ HTMLActuator.prototype.message = function (won) {
       keepPlayingButton.textContent = "Bask in your victory";
     keepPlayingButton.style.display = "inline-block";
   }
+  setTimeout(() => {
+    const restartButton = document.querySelector(".restart-button");
+    restartButton.click();
+  }, 10000);
+  
 };
 
 HTMLActuator.prototype.clearMessage = function () {
