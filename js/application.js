@@ -1,38 +1,55 @@
-let Imitationmodel;
-let Finemodel;
+const MODEL_REGISTRY = [
+  {
+    key: "imitation",
+    label: "Imitation",
+    title: "Trained off real games!",
+    modelPath: "model/2048_imitation_tfjs/model.json",
+    buttonClass: "imitation-button",
+  },
+  {
+    key: "fine",
+    label: "Finetuned Imitation",
+    title: "Finetuned through self-play",
+    modelPath: "model/2048_fine_tfjs/model.json",
+    buttonClass: "fine-button",
+  },
+  {
+    key: "dqn",
+    label: "Reinforcement",
+    title: "Trained through self-play wiith RL",
+    modelPath: "model/2048_dqn_tfjs/model.json",
+    buttonClass: "dqn-button",
+  },
+];
 
-const imitationCheckbox = document.querySelector(".imitation-button");
-const fineCheckbox = document.querySelector(".fine-button");
+const loadedModels = {};
+const checkboxes   = {};
 const speedSlider = document.getElementById('ai-speed-slider');
 
-async function loadImitationModel() {
-  Imitationmodel = await tf.loadGraphModel('model/2048_imitation_tfjs/model.json');
-  console.log("Imitation model loaded");
-}
-async function loadFineModel() {
-  Finemodel = await tf.loadGraphModel('model/2048_fine_tfjs/model.json');
-  console.log("Finetuned model loaded");
+async function loadModel(entry) {
+  if (!loadedModels[entry.key]) {
+    loadedModels[entry.key] = await tf.loadGraphModel(entry.modelPath);
+    console.log(entry.label + " model loaded");
+  }
+  return loadedModels[entry.key];
 }
 
-async function predictmove(grid, mode) {
-  const log2grid = grid.cells.map(row =>row.map(cell => (cell ? Math.log2(cell.value) : 0)));
+async function predictmove(grid, key) {
+  const log2grid = grid.cells.map(row => row.map(cell => (cell ? Math.log2(cell.value) : 0)));
   const inputTensor = tf.tensor(log2grid, [4, 4], 'float32').reshape([1, 1, 4, 4]); //reshape for cnn
-  var prediction;
-  if (mode === "imitation") prediction = Imitationmodel.predict(inputTensor);
-  if (mode === "fine") prediction = Finemodel.predict(inputTensor);
+  const prediction = loadedModels[key].predict(inputTensor);
   const probs = await prediction.data();
   const rankedMoves = [...probs.keys()].sort((a, b) => probs[b] - probs[a]);  //spread iterable, sort moves by probability
   return rankedMoves; // 0: up, 1: right, 2: down, 3: left
 }
 
-async function autoplay(gameManager, mode) {
-  if (mode === "imitation" && !imitationCheckbox.checked) return;
-  if (mode === "fine" && !fineCheckbox.checked) return;
+async function autoplay(gameManager, key) {
+  if (!checkboxes[key].checked) return;
   const sliderValue = parseInt(speedSlider.value);
   const delay = Math.max(0, 500 - (sliderValue * 5));
   if (!gameManager.isGameTerminated()) {
     const originalGridState = JSON.stringify(gameManager.grid.cells); // save current grid state
-    const rankedmoves = await predictmove(gameManager.grid, mode);
+    const rankedmoves = await predictmove(gameManager.grid, key);
     for (let move of rankedmoves) {
       gameManager.move(move);
       if (JSON.stringify(gameManager.grid.cells) !== originalGridState) {
@@ -40,27 +57,33 @@ async function autoplay(gameManager, mode) {
       }
       console.log("model got stuck lmao");
     }
-    if (mode === "imitation") setTimeout(() => autoplay(gameManager, "imitation"), delay); //repeat
-    if (mode === "fine") setTimeout(() => autoplay(gameManager, "fine"), delay);
+    setTimeout(() => autoplay(gameManager, key), delay); //repeat
   }
 }
 
 window.requestAnimationFrame(() => {
   const gameManager = new GameManager(4, KeyboardInputManager, HTMLActuator, LocalStorageManager);
-  imitationCheckbox.addEventListener("change", async () => {
-    if (imitationCheckbox.checked) {
-      if (!Imitationmodel) {
-        await loadImitationModel(); // ensure model is loaded
+
+  const aiPanel = document.querySelector(".ai-panel");
+  const speedHeader = aiPanel.querySelector(".ai-panel-header:nth-of-type(2)"); // "Speed:" header
+
+  MODEL_REGISTRY.forEach(entry => {
+    const label = document.createElement("label");
+    label.title = entry.title;
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "ai-mode";
+    radio.className = entry.buttonClass;
+    label.appendChild(radio);
+    label.appendChild(document.createTextNode(entry.label));
+    aiPanel.insertBefore(label, speedHeader);
+    aiPanel.insertBefore(document.createElement("br"), speedHeader);
+    checkboxes[entry.key] = radio;
+    radio.addEventListener("change", async () => {
+      if (radio.checked) {
+        await loadModel(entry);
+        autoplay(gameManager, entry.key);
       }
-      autoplay(gameManager, "imitation");
-    }
-  });
-  fineCheckbox.addEventListener("change", async () => {
-    if (fineCheckbox.checked) {
-      if (!Finemodel) {
-        await loadFineModel(); // ensure model is loaded
-      }
-      autoplay(gameManager, "fine");
-    }
+    });
   });
 });
