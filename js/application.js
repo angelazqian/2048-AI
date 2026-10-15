@@ -6,19 +6,26 @@ const MODEL_REGISTRY = [
     modelPath: "model/2048_imitation_tfjs/model.json",
     buttonClass: "imitation-button",
   },
-  {
-    key: "fine",
-    label: "Finetuned Imitation",
-    title: "Finetuned through self-play",
-    modelPath: "model/2048_fine_tfjs/model.json",
-    buttonClass: "fine-button",
-  },
+  // {
+  //   key: "fine",
+  //   label: "Finetuned Imitation",
+  //   title: "Finetuned through self-play",
+  //   modelPath: "model/2048_fine_tfjs/model.json",
+  //   buttonClass: "fine-button",
+  // },
   {
     key: "dqn",
     label: "Reinforcement",
-    title: "Trained through self-play wiith RL",
+    title: "Trained through self-play with RL",
     modelPath: "model/2048_dqn_tfjs/model.json",
     buttonClass: "dqn-button",
+  },
+  {
+    key: "imadqn",
+    label: "Imitation + RL",
+    title: "Imitation model finetuned through self-play with RL",
+    modelPath: "model/2048_warm_dqn_tfjs/model.json",
+    buttonClass: "imadqn-button",
   },
 ];
 
