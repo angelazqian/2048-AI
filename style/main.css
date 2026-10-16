@@ -831,6 +831,21 @@ input[type="text"].state-input {
 @media screen and (max-width: 520px) {
   .ai-panel {
     width: 280px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .ai-panel br {
+    display: none;
+  }
+  .ai-panel-header, #ai-speed-slider, .speed-labels, .stats-container {
+    grid-column: 1 / -1;
+  }
+  #ai-speed-slider, .speed-labels {
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: 0;
+    margin-right: 0;
   }
   html, body {
     width: 100%;
